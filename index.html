@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0"> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- <meta http-equiv="X-UA-Compatible" content="ie=edge"> -->
     <title>Giphy API</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
@@ -13,17 +13,21 @@
 <body>
     <div class="container-fluid">
         <div class="row">
-            <div class="col-lg-auto" id="buttons"></div>
+            <div class="col-lg-8" id="buttons"></div>
         </div>
         <div class="row">
-                <div class="col-lg-8" id="gifs"></div>
+                <div class="col-lg-8">
+                    <div class="row"id="gifs">
+                        
+                    </div>
+                </div>
                 <div class="col-lg-4">
                         <form>
                             <div class="form-group">
-                                <label for="searchTerm">Add an animal</label>
+                                <label for="searchTerm">Add a sport</label>
                                 <input type="search" class="form-control" id="searchTerm">
                             </div>
-                            <button type="submit" class="btn btn-primary">Submit</button>
+                            <button id="searchSubmit" class="btn btn-primary">Submit</button>
                         </form>
                 </div>
         </div>
