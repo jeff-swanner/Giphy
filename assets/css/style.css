@@ -1,0 +1,20 @@
+img {
+    cursor: pointer;
+}
+
+#buttons {
+    margin-bottom: 20px;
+}
+
+.gifDisplay {
+    margin-bottom: 20px;
+}
+
+#testButton {
+    position: absolute;
+    top: 40px;
+    left: 15px;
+    padding: 0;
+    border: none;
+    background: none;
+}

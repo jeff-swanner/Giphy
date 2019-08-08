@@ -1,9 +1,28 @@
 $(document).ready(function(){
-    var topics = {
-        animals: ["golf","basketball","football","mma","soccer","tennis","lacross","hockey","baseball","rugby","table tennis","volleyball","field hockey","cricket","formula 1","nascar","snowboarding","bowling"]
+    var firebaseConfig = {
+        apiKey: "AIzaSyBO6MDLQR-1NRye3-afG30crwJ0AtD9AjU",
+        authDomain: "giphy-54709.firebaseapp.com",
+        databaseURL: "https://giphy-54709.firebaseio.com",
+        projectId: "giphy-54709",
+        storageBucket: "",
+        messagingSenderId: "772101188776",
+        appId: "1:772101188776:web:851c88ac14db2c31"
     };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    var database = firebase.database();
+
+    // Object with array holding gif search termw
+    var topics = {
+        sports: ["golf","basketball","football","mma","soccer","tennis","lacross","hockey","baseball","rugby","table tennis","volleyball","field hockey","cricket","formula 1","nascar","snowboarding","bowling"]
+    };
+
+    // List of global variables
     var category;
     var offset;
+
+    // Bubble sort used to keep search terms in alphabetical order
     function bubble_Sort(a) {
         var swapp;
         var n = a.length-1;
@@ -23,87 +42,82 @@ $(document).ready(function(){
      return x; 
     };
 
+    // Generates initial sports buttons and regens when new sports are added
     function buttonGen() {
         $("#buttons").empty();
-        for (i=0;i<topics.animals.length;i++) {
+        for (i=0;i<topics.sports.length;i++) {
             var newButton = $("<button>")
-            newButton.text(topics.animals[i]);
+            newButton.text(topics.sports[i]);
             newButton.attr("class","giphySearch btn btn-outline-info")
             $("#buttons").append(newButton);
         };
     };
-    topics.animals = bubble_Sort(topics.animals);
+
+    // Search gif images from Giphy and adds to HTML
+    function gifGen() {
+        var queryURL = "https://api.giphy.com/v1/gifs/search?q="+category+"&offset="+offset+"&limit=10&api_key=Lk61WOxNUNNqUE4NAgrAeLrACvNBXyaz";
+        $.ajax({
+            url: queryURL,
+            method: "GET"
+        }).then(function(response) {
+            for (i=0;i<response.data.length;i++) {
+                var newDiv = $("<div>");
+                newDiv.attr("class","col-lg-4");
+                newDiv.html("<p>Rating: "+response.data[i].rating+"</p>");
+                var fixedURL = response.data[i].images.fixed_width_still.url;
+                var animatedURL = response.data[i].images.fixed_width.url;
+                newImg = $("<img>");
+                newImg.attr("src",fixedURL);
+                newImg.attr("class","gifDisplay");
+                newImg.attr("data-fixed",fixedURL);
+                newImg.attr("data-animated",animatedURL);
+                newImg.attr("data-state","fixed");
+                newImg.attr("alt","image");
+                newDiv.append(newImg);
+                var favoriteButton = $("<button>");
+                favoriteButton.attr("class","fa fa-star-o btn btn-outline-info");
+                favoriteButton.attr("id","testButton");
+                favoriteButton.attr("data-fixed",fixedURL);
+                favoriteButton.attr("data-animated",animatedURL);
+                newDiv.append(favoriteButton);
+                $("#gifs").append(newDiv);
+            };
+            if (response.data.length === 10) {
+                var newButton = $("<button>");
+                newButton.attr("class","col-lg-12 btn btn-outline-info loadMoreButton");
+                newButton.text("Load More");
+                newButton.attr("data-search",category);
+                $("#gifs").append(newButton);
+            } else {
+                var newButton = $("<button>");
+                newButton.attr("class","col-lg-12 btn btn-outline-info disabled");
+                newButton.text("No More Gifs To Load");
+                $("#gifs").append(newButton);
+            };
+        });
+    };
+
+    // Initial page load, generates search buttons
+    topics.sports = bubble_Sort(topics.sports);
     buttonGen();
 
+    // Calls gifGen function when search button is clicked
     $(document).on('click','.giphySearch',function() {
         $(this).addClass('active').siblings().not(this).removeClass('active');
-        offset = 0;
+        offset = 0; // Tracks offset when loading more gifs
         category = $(this).text();
-        var queryURL = "https://api.giphy.com/v1/gifs/search?q="+category+"&limit=10&api_key=Lk61WOxNUNNqUE4NAgrAeLrACvNBXyaz";
-        $.ajax({
-            url: queryURL,
-            method: "GET"
-        }).then(function(response) {
-            console.log(response);
-            $("#gifs").empty();
-            for (i=0;i<response.data.length;i++) {
-                var newDiv = $("<div>");
-                newDiv.attr("class","col-lg-4");
-                newDiv.html("<p>Rating: "+response.data[i].rating+"</p>");
-                var fixedURL = response.data[i].images.fixed_width_still.url;
-                var animatedURL = response.data[i].images.fixed_width.url;
-                newImg = $("<img>");
-                newImg.attr("src",fixedURL);
-                newImg.attr("class","gifDisplay");
-                newImg.attr("data-fixed",fixedURL);
-                newImg.attr("data-animated",animatedURL);
-                newImg.attr("data-state","fixed");
-                newImg.attr("alt","image");
-                newDiv.append(newImg);
-                $("#gifs").append(newDiv);
-            };
-            var newButton = $("<button>");
-            newButton.attr("class","col-lg-12 btn btn-outline-info loadMoreButton");
-            newButton.text("Load 10 More");
-            newButton.attr("data-search",category);
-            $("#gifs").append(newButton);
-        });
-        
+        $("#gifs").empty();
+        gifGen();
     });
 
+    // Loads 10 more gifs when load more button is clicked
     $(document).on('click','.loadMoreButton',function(){
         offset+=10;
-        var queryURL = "https://api.giphy.com/v1/gifs/search?q="+$(this).attr("data-search")+"&offset="+offset+"&limit=10&api_key=Lk61WOxNUNNqUE4NAgrAeLrACvNBXyaz";
-        $.ajax({
-            url: queryURL,
-            method: "GET"
-        }).then(function(response) {
-            console.log(response);
-            $(".loadMoreButton").remove();
-            for (i=0;i<response.data.length;i++) {
-                var newDiv = $("<div>");
-                newDiv.attr("class","col-lg-4");
-                newDiv.html("<p>Rating: "+response.data[i].rating+"</p>");
-                var fixedURL = response.data[i].images.fixed_width_still.url;
-                var animatedURL = response.data[i].images.fixed_width.url;
-                newImg = $("<img>");
-                newImg.attr("src",fixedURL);
-                newImg.attr("class","gifDisplay");
-                newImg.attr("data-fixed",fixedURL);
-                newImg.attr("data-animated",animatedURL);
-                newImg.attr("data-state","fixed");
-                newImg.attr("alt","image");
-                newDiv.append(newImg);
-                $("#gifs").append(newDiv);
-            };
-            var newButton = $("<button>");
-            newButton.attr("class","col-lg-12 btn btn-outline-info loadMoreButton");
-            newButton.text("Load 10 More");
-            newButton.attr("data-search",category);
-            $("#gifs").append(newButton);
-        });
+        $(".loadMoreButton").remove();
+        gifGen();
     });
 
+    // Animates gifs when clicked on, and stops when clicked again
     $(document).on('click','.gifDisplay',function(){
         if ($(this).attr("data-state")==="fixed") {
             $(this).attr("src",$(this).attr("data-animated"));
@@ -114,12 +128,64 @@ $(document).ready(function(){
         };
     });
 
+    // Takes sport input when submit button is clicked and adds to search button list
     $("#searchSubmit").click(function(event) {
         event.preventDefault();
-        let input = $("#searchTerm").val();
+        let input = $("#searchTerm").val().toLowerCase();
         $("#searchTerm").val("");
-        topics.animals.push(input);
-        topics.animals = bubble_Sort(topics.animals);
+        topics.sports.push(input);
+        topics.sports = bubble_Sort(topics.sports);
         buttonGen();
     });
+    // For favorites functionality to be implemented in future
+    $(document).on('click','.fa',function(e){
+        if ($(this).attr("class")==="fa fa-star btn btn-outline-info") {
+            $(this).attr("class","fa fa-star-o btn btn-outline-info");
+            database.ref("/favorites").child($(this).attr("data-key")).remove();
+        } else {
+            $(this).attr("class","fa fa-star btn btn-outline-info");
+            database.ref("/favorites").push({
+                fixedURL: $(this).attr("data-fixed"),
+                animatedURL: $(this).attr("data-animated")
+            });
+        };
+    });
+    $(document).on('click','#favorites',function(){
+        console.log("test");
+        $("#gifs").empty();
+        database.ref("/favorites").on("child_added", function(childSnapshot) {
+            console.log(childSnapshot.key);
+            console.log(childSnapshot.val().fixedURL);
+            console.log(childSnapshot.val().animatedURL);
+            
+
+            var newDiv = $("<div>");
+            newDiv.attr("class","col-lg-4");
+            newDiv.html("<p>Rating: "+"pg"+"</p>");
+            var fixedURL = childSnapshot.val().fixedURL;
+            var animatedURL = childSnapshot.val().animatedURL;
+            newImg = $("<img>");
+            newImg.attr("src",fixedURL);
+            newImg.attr("class","gifDisplay");
+            newImg.attr("data-fixed",fixedURL);
+            newImg.attr("data-animated",animatedURL);
+            newImg.attr("data-state","fixed");
+            newImg.attr("alt","image");
+            newDiv.append(newImg);
+            var favoriteButton = $("<button>");
+            favoriteButton.attr("class","fa fa-star btn btn-outline-info");
+            favoriteButton.attr("id","testButton");
+            favoriteButton.attr("data-fixed",fixedURL);
+            favoriteButton.attr("data-animated",animatedURL);
+            favoriteButton.attr("data-key",childSnapshot.key);
+            newDiv.append(favoriteButton);
+            $("#gifs").append(newDiv);
+
+
+
+
+        });
+        
+    });
 });
+
