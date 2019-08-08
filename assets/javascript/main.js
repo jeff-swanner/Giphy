@@ -12,7 +12,7 @@ $(document).ready(function(){
     firebase.initializeApp(firebaseConfig);
 
     var database = firebase.database();
-
+    var favorites = false;
     // Object with array holding gif search termw
     var topics = {
         sports: ["golf","basketball","football","mma","soccer","tennis","lacross","hockey","baseball","rugby","table tennis","volleyball","field hockey","cricket","formula 1","nascar","snowboarding","bowling"]
@@ -97,12 +97,44 @@ $(document).ready(function(){
         });
     };
 
+    function databaseCall() {
+        $("#gifs").empty();
+        database.ref("/favorites").on("child_added", function(childSnapshot) {
+            console.log("test");
+            if (favorites) {
+                var newDiv = $("<div>");
+                newDiv.attr("class","col-lg-4");
+                newDiv.html("<p>Rating: "+"pg"+"</p>");
+                var fixedURL = childSnapshot.val().fixedURL;
+                var animatedURL = childSnapshot.val().animatedURL;
+                newImg = $("<img>");
+                newImg.attr("src",fixedURL);
+                newImg.attr("class","gifDisplay");
+                newImg.attr("data-fixed",fixedURL);
+                newImg.attr("data-animated",animatedURL);
+                newImg.attr("data-state","fixed");
+                newImg.attr("alt","image");
+                newDiv.append(newImg);
+                var favoriteButton = $("<button>");
+                favoriteButton.attr("class","fa fa-star btn btn-outline-info");
+                favoriteButton.attr("id","testButton");
+                favoriteButton.attr("data-fixed",fixedURL);
+                favoriteButton.attr("data-animated",animatedURL);
+                favoriteButton.attr("data-key",childSnapshot.key);
+                newDiv.append(favoriteButton);
+                $("#gifs").append(newDiv);
+            };
+        });
+    };
+
     // Initial page load, generates search buttons
     topics.sports = bubble_Sort(topics.sports);
     buttonGen();
 
     // Calls gifGen function when search button is clicked
     $(document).on('click','.giphySearch',function() {
+        $("#favorites").removeClass('active');
+        favorites = false;
         $(this).addClass('active').siblings().not(this).removeClass('active');
         offset = 0; // Tracks offset when loading more gifs
         category = $(this).text();
@@ -137,12 +169,13 @@ $(document).ready(function(){
         topics.sports = bubble_Sort(topics.sports);
         buttonGen();
     });
-    // For favorites functionality to be implemented in future
+    // Adds and removes from favorites
     $(document).on('click','.fa',function(e){
-        if ($(this).attr("class")==="fa fa-star btn btn-outline-info") {
+        if ($(this).attr("class")==="fa fa-star btn btn-outline-info"&&favorites) {
             $(this).attr("class","fa fa-star-o btn btn-outline-info");
             database.ref("/favorites").child($(this).attr("data-key")).remove();
-        } else {
+            databaseCall();
+        } else if ($(this).attr("class")==="fa fa-star-o btn btn-outline-info") {
             $(this).attr("class","fa fa-star btn btn-outline-info");
             database.ref("/favorites").push({
                 fixedURL: $(this).attr("data-fixed"),
@@ -150,42 +183,13 @@ $(document).ready(function(){
             });
         };
     });
+
+    // Loads favorites Gifs
     $(document).on('click','#favorites',function(){
-        console.log("test");
-        $("#gifs").empty();
-        database.ref("/favorites").on("child_added", function(childSnapshot) {
-            console.log(childSnapshot.key);
-            console.log(childSnapshot.val().fixedURL);
-            console.log(childSnapshot.val().animatedURL);
-            
-
-            var newDiv = $("<div>");
-            newDiv.attr("class","col-lg-4");
-            newDiv.html("<p>Rating: "+"pg"+"</p>");
-            var fixedURL = childSnapshot.val().fixedURL;
-            var animatedURL = childSnapshot.val().animatedURL;
-            newImg = $("<img>");
-            newImg.attr("src",fixedURL);
-            newImg.attr("class","gifDisplay");
-            newImg.attr("data-fixed",fixedURL);
-            newImg.attr("data-animated",animatedURL);
-            newImg.attr("data-state","fixed");
-            newImg.attr("alt","image");
-            newDiv.append(newImg);
-            var favoriteButton = $("<button>");
-            favoriteButton.attr("class","fa fa-star btn btn-outline-info");
-            favoriteButton.attr("id","testButton");
-            favoriteButton.attr("data-fixed",fixedURL);
-            favoriteButton.attr("data-animated",animatedURL);
-            favoriteButton.attr("data-key",childSnapshot.key);
-            newDiv.append(favoriteButton);
-            $("#gifs").append(newDiv);
-
-
-
-
-        });
-        
+        $(this).addClass('active');
+        $(".giphySearch").removeClass('active');
+        favorites = true;
+        databaseCall();
     });
 });
 
